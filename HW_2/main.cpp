@@ -1,12 +1,19 @@
 #include <iostream>
+#include <cmath>
 #include "CustomException.h"
 #include "Query.h"
 #include "HWStack.h"
+#include "HWQueue.h"
 
 #define CMD_CALL_WORDS 4
 #define CMD_GO_WORDS 3
 
 using namespace std;
+
+void startElevator(int n_floors, HWQueue<Query> queries);
+void pushQueriesBeforeCurrentInStack(HWQueue<Query>* queries, Query current, HWStack<Query>* active_queries,
+                                     float time, int floor, string direction);
+void printElevator(float time, int floor, string direction);
 
 Query parseQuery(string query);
 void parseQueries(Query* queries, string* queries_raw, int n_queries);
@@ -27,6 +34,13 @@ int main()
     int n_floors = N; // number of floors
     int n_queries = K; // number of queries
 
+    if (n_queries == 0 || n_floors == 0)
+    {
+        cout << "floors and queries count must be more than 0" << endl;
+        cout << "terminating..." << endl;
+        return 0;
+    }
+
     string queries_raw[n_queries];
 
     for (int i = 0; i < n_queries; i++)
@@ -45,15 +59,224 @@ int main()
     parseQueries(queries, queries_raw, n_queries);
     sortQueries(queries, n_queries);
 
-    for (int i = 0; i < n_queries; i++)
+    try
     {
-        cout << endl << "type:" << queries[i].getType() << endl;
-        cout << "direction:" << queries[i].getDirection() << endl;
-        cout << "floor:" << queries[i].getFloor() << endl;
-        cout << "time:" << queries[i].getTime() << endl;
+        HWQueue<Query> q_queries(n_queries);
+
+        for (int i = 0; i < n_queries; i++)
+        {
+            q_queries.enqueue(queries[i]);
+        }
+        startElevator(n_floors, q_queries);
+    }
+    catch (const CustomException ce)
+    {
+        cout << ce.what() << endl;
     }
 
+
     return 0;
+}
+
+void startElevator(int n_floors, HWQueue<Query> queries)
+{
+    HWStack<Query> active_queries(queries.getSize());
+    float time = queries.seeFront().getTime();
+    int floor = 1;
+    string direction = "up";
+
+    while (queries.getSize() > 0)
+    {
+        Query bottom_query = queries.dequeue();
+        active_queries.push(bottom_query);
+        direction = (bottom_query.getFloor() >= floor) ? "up" : "down";
+
+        while (floor != bottom_query.getFloor())
+        {
+            Query current = active_queries.peek();
+
+            pushQueriesBeforeCurrentInStack(&queries, current, &active_queries, time, floor, direction);
+            /*
+                set the criteria (up/down, floor range, time range)
+                get all responding to criteria
+                order them by criteria
+                push to stack in order
+            */
+
+            while (floor == current.getFloor() && active_queries.getSize() > 0)
+            {
+                printElevator(time, floor, direction); // function
+                active_queries.pop();
+                try
+                {
+                    current = active_queries.peek();
+                }
+                catch (const CustomException ce)
+                {
+                    break; // exit loop
+                }
+            }
+
+            (direction == "up") ? floor++: floor--;
+            time += 5;
+            /*
+                increment floor
+                add 5 to time
+            */
+        }
+
+        printElevator(time, floor, direction);
+        active_queries.pop();
+    }
+
+    while (active_queries.getSize() > 0)
+    {
+        Query current = active_queries.pop();
+        time += 5 * abs(current.getFloor() - floor);
+        floor = current.getFloor();
+
+        direction = (current.getFloor() >= floor) ? "up" : "down";
+        printElevator(time, floor, direction);
+    }
+}
+
+void pushQueriesBeforeCurrentInStack(HWQueue<Query>* queries, Query current, HWStack<Query>* active_queries,
+                                     float time, int floor, string direction)
+{
+    int valid_queries = 0;
+
+    //get the size for the array
+    for (int i = 0; i < queries->getSize(); i++)
+    {
+        Query next = queries->dequeue();
+
+        if (next.getTime() > time)
+        {
+            queries->enqueue(next);
+        }
+        else
+        {
+            if (direction == "up")
+            {
+                if (next.getType() == "call" && next.getDirection() == "down")
+                {
+                    queries->enqueue(next);
+                    continue;
+                }
+
+                if (next.getFloor() >= floor && next.getFloor() <= active_queries->peek().getFloor())
+                {
+                    valid_queries++;
+                    queries->enqueue(next);
+                } else
+                {
+                    queries->enqueue(next);
+                }
+            }
+            else
+            {
+                if (next.getType() == "call" && next.getDirection() == "up")
+                {
+                    queries->enqueue(next);
+                    continue;
+                }
+
+                if (next.getFloor() <= floor && next.getFloor() >= active_queries->peek().getFloor())
+                {
+                    valid_queries++;
+                    queries->enqueue(next);
+                } else
+                {
+                    queries->enqueue(next);
+                }
+            }
+        }
+    }
+
+    if (valid_queries == 0)
+    {
+        return;
+    }
+
+    Query unsorted[valid_queries];
+    int ind = 0;
+
+    //fill array to be sorted
+    int queue_size = queries->getSize();
+    for (int i = 0; i < queue_size; i++)
+    {
+        Query next = queries->dequeue();
+
+        if (next.getTime() > time)
+        {
+            queries->enqueue(next);
+        }
+        else
+        {
+            if (direction == "up")
+            {
+                if (next.getType() == "call" && next.getDirection() == "down")
+                {
+                    queries->enqueue(next);
+                    continue;
+                }
+
+                if (next.getFloor() >= floor && next.getFloor() <= active_queries->peek().getFloor())
+                {
+                    unsorted[ind++] = next;
+                } else
+                {
+                    queries->enqueue(next);
+                }
+            }
+            else
+            {
+                if (next.getType() == "call" && next.getDirection() == "up")
+                {
+                    queries->enqueue(next);
+                    continue;
+                }
+
+                if (next.getFloor() <= floor && next.getFloor() >= active_queries->peek().getFloor())
+                {
+                    unsorted[ind++] = next;
+                } else
+                {
+                    queries->enqueue(next);
+                }
+            }
+
+
+        }
+    }
+
+    //bubble sort
+    for (int i = 0; i < valid_queries - 1; i++)
+    {
+        for (int j = i + 1; j < valid_queries; j++)
+        {
+            if ((direction == "up") ?
+                (unsorted[i].getFloor() < unsorted[j].getFloor()) :
+                (unsorted[i].getFloor() > unsorted[j].getFloor()))
+            {
+                Query swapper = unsorted[i];
+                unsorted[i] = unsorted[j];
+                unsorted[j] = swapper;
+            }
+        }
+    }
+
+    //align sorted array in stack
+    for (int i = 0; i < valid_queries; i++)
+    {
+        active_queries->push(unsorted[i]);
+    }
+}
+
+void printElevator(float time, int floor, string direction)
+{
+    string dir = (direction == "up") ? "down" : "up";
+    cout << time << " " << floor << " " << dir << endl;
 }
 
 Query parseQuery(string query)
@@ -78,13 +301,15 @@ Query parseQuery(string query)
             {
                 direction = "up";
                 floor_start = 8;
-            } else
+            }
+            else
             {
                 if (query.substr(5, 4) == "down")
                 {
                     direction = "down";
                     floor_start = 10;
-                } else
+                }
+                else
                 {
                     throw CustomException("exception: invalid direction in call query");
                 }
@@ -96,8 +321,8 @@ Query parseQuery(string query)
         }
     }
 
-    int temp_index = floor_start;
-    for (temp_index; query[temp_index] != ' '; temp_index++)
+    int temp_index;
+    for (temp_index = floor_start; query[temp_index] != ' '; temp_index++)
     {
         floor *= 10;
         floor += query[temp_index] - '0';
@@ -105,7 +330,7 @@ Query parseQuery(string query)
 
     bool hasDot = false;
     float afterDot = 1;
-    for (int i = temp_index + 1; i < query.size(); i++)
+    for (unsigned int i = temp_index + 1; i < query.size(); i++)
     {
         if (query[i] == '.')
         {
@@ -117,7 +342,8 @@ Query parseQuery(string query)
         {
             time *= 10;
             time += query[i] - '0';
-        } else
+        }
+        else
         {
             afterDot /= 10;
             time += afterDot * (query[i] - '0');

@@ -1,5 +1,6 @@
 #ifndef QUERY_H
 #define QUERY_H
+using namespace std;
 
 class Query {
 private:
@@ -19,6 +20,8 @@ public:
     string getDirection();
     int getFloor();
     float getTime();
+
+    friend ostream& operator<< (ostream& stream, const Query& query);
 private:
     void setType(string type);
     void setFloor(int floor);
@@ -85,6 +88,7 @@ void Query::setTime(float time)
         throw CustomException("exception: invalid time");
     }
 }
+//
 
 //getters
 string Query::getType()
@@ -106,5 +110,16 @@ float Query::getTime()
 {
     return this->time;
 }
+//
 
+
+ostream& operator<< (ostream& stream, Query& query)
+{
+    stream << "type: " << query.getType() << endl <<
+                "direction: " << query.getDirection() << endl <<
+                "floor: " << query.getFloor() << endl <<
+                "time: " << query.getTime() << endl;
+    return stream;
+
+}
 #endif // QUERY_H
