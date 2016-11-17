@@ -55,12 +55,12 @@ int main()
         }
     }
 
-    Query queries[n_queries];
-    parseQueries(queries, queries_raw, n_queries);
-    sortQueries(queries, n_queries);
-
     try
     {
+        Query queries[n_queries];
+        parseQueries(queries, queries_raw, n_queries);
+        sortQueries(queries, n_queries);
+
         HWQueue<Query> q_queries(n_queries);
 
         for (int i = 0; i < n_queries; i++)
@@ -73,7 +73,6 @@ int main()
     {
         cout << ce.what() << endl;
     }
-
 
     return 0;
 }
@@ -90,6 +89,11 @@ void startElevator(int n_floors, HWQueue<Query> queries)
         Query bottom_query = queries.dequeue();
         active_queries.push(bottom_query);
         direction = (bottom_query.getFloor() >= floor) ? "up" : "down";
+
+        if (bottom_query.getTime() > time)
+        {
+            time = bottom_query.getTime();
+        }
 
         while (floor != bottom_query.getFloor())
         {
@@ -269,6 +273,15 @@ void pushQueriesBeforeCurrentInStack(HWQueue<Query>* queries, Query current, HWS
     //align sorted array in stack
     for (int i = 0; i < valid_queries; i++)
     {
+        if (active_queries->getSize() > 0)
+        {
+            if (unsorted[i].getFloor() == active_queries->peek().getFloor())
+            {
+                //skip equal queries
+                continue;
+            }
+        }
+
         active_queries->push(unsorted[i]);
     }
 }

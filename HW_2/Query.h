@@ -11,6 +11,7 @@ private:
 public:
     Query();
     Query(string type, int floor, float time);
+    ~Query();
 
     bool operator>(Query & other);
 
@@ -20,8 +21,6 @@ public:
     string getDirection();
     int getFloor();
     float getTime();
-
-    friend ostream& operator<< (ostream& stream, const Query& query);
 private:
     void setType(string type);
     void setFloor(int floor);
@@ -38,6 +37,8 @@ Query::Query(string type, int floor, float time)
 
     this->direction = "unknown";
 }
+
+Query::~Query() {}
 
 bool Query::operator>(Query & other)
 {
@@ -80,7 +81,7 @@ void Query::setFloor(int floor)
 
 void Query::setTime(float time)
 {
-    if (time >= 1)
+    if (time >= 0)
     {
         this->time = time;
     } else
@@ -111,15 +112,4 @@ float Query::getTime()
     return this->time;
 }
 //
-
-
-ostream& operator<< (ostream& stream, Query& query)
-{
-    stream << "type: " << query.getType() << endl <<
-                "direction: " << query.getDirection() << endl <<
-                "floor: " << query.getFloor() << endl <<
-                "time: " << query.getTime() << endl;
-    return stream;
-
-}
 #endif // QUERY_H

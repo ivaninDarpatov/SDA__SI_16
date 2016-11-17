@@ -46,7 +46,7 @@ HWStack<DATA>::HWStack(int capacity)
 template <class DATA>
 HWStack<DATA>::~HWStack()
 {
-    //delete [] this->container; doesn't seem to work
+
 }
 
 //private methods

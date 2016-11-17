@@ -18,6 +18,7 @@ private:
 public:
     HWQueue();
     HWQueue(int capacity);
+    ~HWQueue();
 
     void enqueue(DATA toEnqueue);
     DATA dequeue();
@@ -44,6 +45,12 @@ HWQueue<DATA>::HWQueue(int capacity)
     this->back_ind = 0;
     this->last_op = DEQUEUED;
     this->current_size = 0;
+}
+
+template <class DATA>
+HWQueue<DATA>::~HWQueue()
+{
+
 }
 
 //interface methods
