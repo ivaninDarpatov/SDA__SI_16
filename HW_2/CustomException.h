@@ -1,3 +1,17 @@
+/**
+ *
+ * Solution to homework task
+ * Data Structures Course
+ * Faculty of Mathematics and Informatics of Sofia University
+ * Winter semester 2016/2017
+ *
+ * @author Ivan Darpatov
+ * @idnumber 61810
+ * @task 2
+ * @compiler GCC
+ *
+ */
+
 #ifndef CUSTOM_EXCEPTION_H
 #define CUSTOM_EXCEPTION_H
 using namespace std;
