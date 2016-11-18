@@ -1,3 +1,17 @@
+/**
+ *
+ * Solution to homework task
+ * Data Structures Course
+ * Faculty of Mathematics and Informatics of Sofia University
+ * Winter semester 2016/2017
+ *
+ * @author Ivan Darpatov
+ * @idnumber 61810
+ * @task 2
+ * @compiler GCC
+ *
+ */
+
 #ifndef QUERY_H
 #define QUERY_H
 using namespace std;
@@ -7,29 +21,27 @@ private:
     string type;
     string direction;
     int floor;
-    float time;
+    int time;
 public:
     Query();
-    Query(string type, int floor, float time);
+    Query(string type, int floor, int time);
     ~Query();
-
-    bool operator>(Query & other);
 
     void setDirection(string direction);
 
     string getType();
     string getDirection();
     int getFloor();
-    float getTime();
+    int getTime();
 private:
     void setType(string type);
     void setFloor(int floor);
-    void setTime(float time);
+    void setTime(int time);
 };
 
 Query::Query() {}
 
-Query::Query(string type, int floor, float time)
+Query::Query(string type, int floor, int time)
 {
     this->setType(type);
     this->setFloor(floor);
@@ -39,11 +51,6 @@ Query::Query(string type, int floor, float time)
 }
 
 Query::~Query() {}
-
-bool Query::operator>(Query & other)
-{
-    return this->time > other.time;
-}
 
 //setters
 void Query::setType(string type)
@@ -79,7 +86,7 @@ void Query::setFloor(int floor)
     }
 }
 
-void Query::setTime(float time)
+void Query::setTime(int time)
 {
     if (time >= 0)
     {
@@ -107,7 +114,7 @@ int Query::getFloor()
     return this->floor;
 }
 
-float Query::getTime()
+int Query::getTime()
 {
     return this->time;
 }
